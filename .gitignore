@@ -1,0 +1,12 @@
+# .gitignore
+
+# Ignorar a pasta do ambiente virtual
+venv/
+
+# Ignorar caches e arquivos compilados do Python
+__pycache__/
+*.pyc
+
+# Outros arquivos que podem ser ignorados (opcional)
+.env
+*.db
