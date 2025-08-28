@@ -1,66 +1,67 @@
-# Instale o Flask primeiro: pip install Flask
-from flask import Flask, request, render_template_string, redirect, url_for
-import os
+from flask import Flask, request, render_template
+import magic  # Para identificar o tipo de arquivo pelo conteúdo
+import fitz   # PyMuPDF, para extrair texto de PDFs
 
 app = Flask(__name__)
-# Define a pasta onde os arquivos serão salvos
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True) # Garante que a pasta exista
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# HTML básico para a página de upload em uma string
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Classificador de Emails</title>
-</head>
-<body>
-    <h1>Faça o upload do seu arquivo</h1>
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Processar">
-    </form>
-    {% if resultado %}
-        <h2>Resultado do Processamento:</h2>
-        <p>{{ resultado }}</p>
-    {% endif %}
-</body>
-</html>
-"""
 
 @app.route('/', methods=['GET', 'POST'])
-def upload_file():
+def processar_entrada():
     resultado = None
     if request.method == 'POST':
-        # Verifica se um arquivo foi enviado na requisição
-        if 'file' not in request.files:
-            return redirect(request.url) # Recarrega a página se nenhum arquivo for enviado
-        
-        file = request.files['file']
-        
-        # Se o usuário não selecionar um arquivo, o navegador envia um campo vazio
-        if file.filename == '':
-            return redirect(request.url)
+        # Verifica se um arquivo foi enviado
+        if 'file' in request.files and request.files['file'].filename != '':
+            file = request.files['file']
 
-        if file:
-            # Salva o arquivo na pasta 'uploads'
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-            file.save(filepath)
+            # --- VERIFICAÇÃO DE CONTEÚDO (Magic Numbers) ---
+            
+            # 1. Define os MIME types que vamos aceitar.
+            # Adicionamos 'application/pdf' à nossa lógica.
+            MIME_TYPES_PERMITIDOS = ['application/pdf']
 
-            # --- AQUI VOCÊ COLOCA A LÓGICA DE PROCESSAMENTO ---
-            # Exemplo simples: contar o número de linhas do arquivo
-            try:
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    num_linhas = sum(1 for line in f)
-                resultado = f"O arquivo '{file.filename}' foi processado com sucesso e contém {num_linhas} linhas."
-            except Exception as e:
-                resultado = f"Erro ao processar o arquivo: {e}"
-            # ----------------------------------------------------
+            # 2. Lê os primeiros 2KB do arquivo para análise.
+            # Isso é suficiente para o python-magic identificar o tipo.
+            chunk = file.stream.read(2048)
+            
+            # 3. CRUCIAL: Retorna o "ponteiro" do arquivo para o início!
+            # Se não fizermos isso, a leitura posterior (para extrair o texto) começará do byte 2049.
+            file.stream.seek(0)
+            
+            # 4. Pede ao magic para identificar o tipo real do arquivo a partir dos bytes lidos.
+            mime_type_real = magic.from_buffer(chunk, mime=True)
 
-    # Renderiza o template HTML passando o resultado (se houver)
-    return render_template_string(HTML_TEMPLATE, resultado=resultado)
+            # 5. Verifica se o tipo real está na nossa lista de permissões OU se é um tipo de texto genérico.
+            if mime_type_real.startswith('text/') or mime_type_real in MIME_TYPES_PERMITIDOS:
+                
+                try:
+                    conteudo_extraido = ""
+                    # --- LÓGICA DE EXTRAÇÃO DE TEXTO ---
+                    # Se for PDF, usa o PyMuPDF para extrair o texto
+                    if mime_type_real == 'application/pdf':
+                        with fitz.open(stream=file.stream, filetype="pdf") as doc:
+                            for page in doc:
+                                conteudo_extraido += page.get_text()
+                    
+                    # Se for texto simples, apenas decodifica
+                    else:
+                        conteudo_extraido = file.read().decode('utf-8', errors='ignore')
+
+                    # Agora processa o 'conteudo_extraido'
+                    num_caracteres = len(conteudo_extraido)
+                    resultado = f"Arquivo '{file.filename}' (tipo: {mime_type_real}) processado. Ele contém {num_caracteres} caracteres."
+
+                except Exception as e:
+                    resultado = f"Erro ao processar o conteúdo do arquivo: {e}"
+            else:
+                # Se o tipo não for permitido, rejeita o arquivo.
+                resultado = f"ERRO: O conteúdo do arquivo foi identificado como '{mime_type_real}', que não é permitido. Apenas arquivos de texto e PDF são aceitos."
+
+        # (A lógica para entrada de texto manual continua a mesma)
+        elif 'text_input' in request.form and request.form['text_input'].strip() != '':
+            texto = request.form['text_input']
+            num_caracteres = len(texto)
+            resultado = f"Texto processado. Ele contém {num_caracteres} caracteres."
+
+    return render_template('index.html', resultado=resultado)
 
 if __name__ == '__main__':
-    app.run(debug=True) # debug=True é ótimo para desenvolvimento
+    app.run(debug=True)

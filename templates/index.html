@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Processador de Texto</title>
+</head>
+<body>
+    <h1>Processador de Texto</h1>
+    <hr>
+
+    <h3>Opção 1: Enviar um arquivo</h3>
+    <p>O processamento começará imediatamente após a seleção.</p>
+    <form id="upload-form" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" id="file-input">
+    </form>
+    
+    <hr>
+
+    <h3>Opção 2: Digitar ou colar o texto</h3>
+    <form id="text-form" method="post">
+        <textarea name="text_input" id="text-input" rows="10" cols="50" placeholder="Digite seu texto aqui..."></textarea>
+        <br>
+        <button type="submit">Enviar Texto</button>
+    </form>
+
+    <hr>
+
+    <div id="resultado-container">
+        {% if resultado %}
+            <h2>Resultado do Processamento:</h2>
+            <p>{{ resultado }}</p>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
