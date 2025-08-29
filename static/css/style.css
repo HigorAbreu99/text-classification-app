@@ -1,0 +1,70 @@
+body { 
+    /* Remove a margem padrão do navegador */
+    margin: 0; 
+    font-family: sans-serif; 
+    
+    /* --- MÁGICA DO FLEXBOX PARA CENTRALIZAÇÃO --- */
+    display: flex;                 /* 1. Transforma o body em um contêiner flexível */
+    flex-direction: column;        /* 2. Organiza os itens em uma coluna (um embaixo do outro) */
+    align-items: center;           /* 3. Centraliza todos os itens horizontalmente */
+    justify-content: center;       /* 4. Centraliza o bloco de conteúdo verticalmente na página */
+    text-align: center;            /* 5. Garante que o texto DENTRO dos elementos também seja centralizado */
+    min-height: 100vh;             /* Garante que o body ocupe pelo menos 100% da altura da tela */
+}
+
+/* Adicionamos uma regra para os formulários para que eles tenham uma largura consistente */
+form {
+    width: 100%;
+    max-width: 600px; /* Impede que os formulários fiquem muito largos em telas grandes */
+    margin-top: 1em;
+}
+
+/* --- O RESTO DO SEU CSS CONTINUA O MESMO --- */
+
+.box {
+    border: 1px solid #ccc;
+    padding: 1em;
+    margin-top: 1em;
+    background-color: #f9f9f9;
+    text-align: left; /* Alinha o texto do resultado à esquerda para melhor legibilidade */
+}
+
+.box pre {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+.error-box { 
+    border: 1px solid #d9534f; 
+    padding: 1em; 
+    margin-top: 1em; 
+    background-color: #f2dede; 
+    color: #a94442; 
+}
+
+.button { 
+    display: inline-block; 
+    padding: 10px 15px; 
+    margin-top: 20px; 
+    background-color: #007bff; 
+    color: white; 
+    text-decoration: none; 
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#text-input {
+    resize: none;
+    overflow-y: auto;
+    height: 200px;
+    width: 100%; /* Agora ele ocupará 100% da largura do formulário */
+    box-sizing: border-box; /* Garante que o padding não quebre o layout */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 14px;
+}

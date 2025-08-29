@@ -1,67 +1,73 @@
-from flask import Flask, request, render_template
-import magic  # Para identificar o tipo de arquivo pelo conteúdo
-import fitz   # PyMuPDF, para extrair texto de PDFs
+# Adicione redirect, url_for e session aos seus imports
+from flask import Flask, request, render_template, redirect, url_for, session
+import magic
+import fitz
+import os # Necessário para a secret_key
 
 app = Flask(__name__)
 
+# IMPORTANTE: Para usar a 'session', o Flask exige uma "chave secreta" (secret_key).
+# Para desenvolvimento, podemos usar uma chave aleatória como esta.
+app.secret_key = os.urandom(24)
+
+# A rota principal agora se chama 'pagina_inicial' para clareza
 @app.route('/', methods=['GET', 'POST'])
-def processar_entrada():
-    resultado = None
+def pagina_inicial():
+    # A lógica de POST foi movida daqui para ser mais limpa
     if request.method == 'POST':
-        # Verifica se um arquivo foi enviado
+        conteudo_extraido = None
+        erro = None
+        
+        # Lógica para ARQUIVO
         if 'file' in request.files and request.files['file'].filename != '':
             file = request.files['file']
-
-            # --- VERIFICAÇÃO DE CONTEÚDO (Magic Numbers) ---
-            
-            # 1. Define os MIME types que vamos aceitar.
-            # Adicionamos 'application/pdf' à nossa lógica.
             MIME_TYPES_PERMITIDOS = ['application/pdf']
-
-            # 2. Lê os primeiros 2KB do arquivo para análise.
-            # Isso é suficiente para o python-magic identificar o tipo.
             chunk = file.stream.read(2048)
-            
-            # 3. CRUCIAL: Retorna o "ponteiro" do arquivo para o início!
-            # Se não fizermos isso, a leitura posterior (para extrair o texto) começará do byte 2049.
             file.stream.seek(0)
-            
-            # 4. Pede ao magic para identificar o tipo real do arquivo a partir dos bytes lidos.
             mime_type_real = magic.from_buffer(chunk, mime=True)
 
-            # 5. Verifica se o tipo real está na nossa lista de permissões OU se é um tipo de texto genérico.
             if mime_type_real.startswith('text/') or mime_type_real in MIME_TYPES_PERMITIDOS:
-                
                 try:
-                    conteudo_extraido = ""
-                    # --- LÓGICA DE EXTRAÇÃO DE TEXTO ---
-                    # Se for PDF, usa o PyMuPDF para extrair o texto
                     if mime_type_real == 'application/pdf':
-                        with fitz.open(stream=file.stream, filetype="pdf") as doc:
-                            for page in doc:
-                                conteudo_extraido += page.get_text()
-                    
-                    # Se for texto simples, apenas decodifica
+                        file_bytes = file.stream.read()
+                        with fitz.open(stream=file_bytes, filetype="pdf") as doc:
+                            conteudo_extraido = "".join(page.get_text() for page in doc)
                     else:
                         conteudo_extraido = file.read().decode('utf-8', errors='ignore')
-
-                    # Agora processa o 'conteudo_extraido'
-                    num_caracteres = len(conteudo_extraido)
-                    resultado = f"Arquivo '{file.filename}' (tipo: {mime_type_real}) processado. Ele contém {num_caracteres} caracteres."
-
                 except Exception as e:
-                    resultado = f"Erro ao processar o conteúdo do arquivo: {e}"
+                    erro = f"Erro ao processar o conteúdo do arquivo: {e}"
             else:
-                # Se o tipo não for permitido, rejeita o arquivo.
-                resultado = f"ERRO: O conteúdo do arquivo foi identificado como '{mime_type_real}', que não é permitido. Apenas arquivos de texto e PDF são aceitos."
-
-        # (A lógica para entrada de texto manual continua a mesma)
+                erro = f"Formato de arquivo não suportado ({mime_type_real})."
+        
+        # Lógica para TEXTO
         elif 'text_input' in request.form and request.form['text_input'].strip() != '':
-            texto = request.form['text_input']
-            num_caracteres = len(texto)
-            resultado = f"Texto processado. Ele contém {num_caracteres} caracteres."
+            conteudo_extraido = request.form['text_input']
+        
+        # Armazena os resultados na SESSÃO
+        if erro:
+            session['erro'] = erro
+        elif conteudo_extraido:
+            # Simula o processamento (contagem de caracteres)
+            resultado_processamento = f"O texto contém {len(conteudo_extraido)} caracteres."
+            session['texto_original'] = conteudo_extraido
+            session['resultado'] = resultado_processamento
+        
+        # Redireciona para a página de resultados
+        return redirect(url_for('exibir_resultado'))
 
-    return render_template('index.html', resultado=resultado)
+    # Se a requisição for GET, apenas mostra a página inicial de upload
+    return render_template('index.html')
+
+# Nova rota APENAS para exibir os resultados
+@app.route('/resultado')
+def exibir_resultado():
+    # Pega os dados da sessão (e os remove para não aparecerem novamente se a página for recarregada)
+    erro = session.pop('erro', None)
+    texto_original = session.pop('texto_original', None)
+    resultado = session.pop('resultado', None)
+    
+    # Renderiza o novo template 'resultado.html' com os dados
+    return render_template('resultado.html', erro=erro, texto_original=texto_original, resultado=resultado)
 
 if __name__ == '__main__':
     app.run(debug=True)
