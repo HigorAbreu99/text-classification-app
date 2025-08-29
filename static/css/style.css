@@ -4,12 +4,16 @@ body {
     font-family: sans-serif; 
     
     /* --- MÁGICA DO FLEXBOX PARA CENTRALIZAÇÃO --- */
-    display: flex;                 /* 1. Transforma o body em um contêiner flexível */
-    flex-direction: column;        /* 2. Organiza os itens em uma coluna (um embaixo do outro) */
-    align-items: center;           /* 3. Centraliza todos os itens horizontalmente */
-    justify-content: center;       /* 4. Centraliza o bloco de conteúdo verticalmente na página */
-    text-align: center;            /* 5. Garante que o texto DENTRO dos elementos também seja centralizado */
-    min-height: 100vh;             /* Garante que o body ocupe pelo menos 100% da altura da tela */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 100vh;
+
+    /* --- LINHAS ADICIONADAS PARA A MARGEM --- */
+    padding: 2em;               /* Adiciona uma margem interna generosa em todos os lados */
+    box-sizing: border-box;     /* Garante que o padding não cause uma barra de rolagem */
 }
 
 /* Adicionamos uma regra para os formulários para que eles tenham uma largura consistente */
@@ -67,4 +71,31 @@ form {
     border-radius: 5px;
     font-family: monospace;
     font-size: 14px;
+}
+
+/* 1. Esconde o input de arquivo original da tela */
+#upload-form input[type="file"] {
+    display: none;
+}
+
+/* 2. Nova classe para a cor secundária do botão */
+.button-secondary {
+    background-color: #6c757d; /* Um tom de cinza, por exemplo */
+}
+
+/* Opcional: Estilo para o nome do arquivo selecionado */
+#file-name {
+    margin-left: 15px;
+    font-style: italic;
+    color: #555;
+}
+
+/* Nova classe para botões de "perigo" ou cancelamento */
+.button-danger {
+    background-color: #dc3545; /* Um tom de vermelho padrão para "danger" */
+}
+
+/* Efeito opcional para quando o mouse passa por cima */
+.button-danger:hover {
+    background-color: #c82333; /* Um vermelho um pouco mais escuro */
 }

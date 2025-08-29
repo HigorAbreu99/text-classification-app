@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Resultado do Processamento</title>
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Resultado do Processamento</title>
 
-</head>
-<body>
-    <h1>Resultado</h1>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='css/style.css') }}"
+        />
+    </head>
+    <body>
+        <h1>Resultado</h1>
 
-    {% if erro %}
+        {% if erro %}
         <div class="error-box">
             <h2>Falha no Processamento</h2>
             <p>{{ erro }}</p>
         </div>
-    
-    {% elif resultado and texto_original %}
+
+        {% elif resultado and texto_original %}
         <h3>Texto Original Enviado:</h3>
         <div class="box">
             <pre>{{ texto_original }}</pre>
@@ -27,10 +29,13 @@
             <p>{{ resultado }}</p>
         </div>
 
-    {% else %}
-        <p>Nenhum resultado para exibir. Por favor, envie um texto ou arquivo na página inicial.</p>
-    {% endif %}
+        {% else %}
+        <p>
+            Nenhum resultado para exibir. Por favor, envie um texto ou arquivo
+            na página inicial.
+        </p>
+        {% endif %}
 
-    <a href="{{ url_for('pagina_inicial') }}" class="button">Voltar</a>
-</body>
+        <a href="{{ url_for('pagina_inicial') }}" class="button">Voltar</a>
+    </body>
 </html>

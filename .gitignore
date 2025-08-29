@@ -1,7 +1,8 @@
-# .gitignore
-
 # Ignorar a pasta do ambiente virtual
 venv/
+
+# Ignorar a pasta com exemplos de input
+inputExamples/
 
 # Ignorar caches e arquivos compilados do Python
 __pycache__/

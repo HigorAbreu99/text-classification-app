@@ -1,33 +1,53 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Processador de Texto</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <h1>Processador de Texto</h1>
-    <hr>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Processador de Texto</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='css/style.css') }}"
+        />
+    </head>
+    <body>
+        <h1>Processador de Texto</h1>
+        <hr />
 
-    <h3>Opção 1: Enviar um arquivo (.txt ou .pdf)</h3>
-    <p>O processamento começará imediatamente após a seleção.</p>
-    <form id="upload-form" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" id="file-input">
-    </form>
-    
-    <hr>
+        <h3>Opção 1: Enviar um arquivo (.txt ou .pdf)</h3>
+        <p>O processamento começará imediatamente após a seleção.</p>
+        <form id="upload-form" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" id="file-input" />
 
-    <h3>Opção 2: Digitar ou colar o texto</h3>
-    <form id="text-form" method="post">
-        <textarea name="text_input" id="text-input" placeholder="Digite seu texto aqui..."></textarea>
-        <br>
-        <button type="submit" class="button">Enviar Texto</button>
-    </form>
+            <label for="file-input" class="button button-secondary"
+                >Escolher Arquivo</label
+            >
 
-    <hr>
+            <span id="file-name">Nenhum arquivo selecionado</span>
+        </form>
 
-    <div id="resultado-container"></div>
+        <hr />
 
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
-</body>
+        <h3>Opção 2: Digitar ou colar o texto</h3>
+        <form id="text-form" method="post">
+            <textarea
+                name="text_input"
+                id="text-input"
+                placeholder="Digite seu texto aqui..."
+            ></textarea>
+            <br />
+            <button
+                type="button"
+                id="clear-button"
+                class="button button-danger"
+            >
+                Limpar
+            </button>
+            <button type="submit" class="button">Enviar Texto</button>
+        </form>
+
+        <hr />
+
+        <div id="resultado-container"></div>
+
+        <script src="{{ url_for('static', filename='main.js') }}"></script>
+    </body>
 </html>
