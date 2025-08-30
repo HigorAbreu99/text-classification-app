@@ -10,9 +10,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Define o tamanho máximo do payload (upload) em 10 MB
-# O cálculo é: 10 * 1024 (KB) * 1024 (MB)
-app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+# Define o tamanho máximo do payload (upload) em 15 MB
+# O cálculo é: 15 * 1024 (KB) * 1024 (MB)
+app.config['MAX_CONTENT_LENGTH'] = 15 * 1024 * 1024
 # -------------------------
 
 # IMPORTANTE: Para usar a 'session', o Flask exige uma "chave secreta" (secret_key).
@@ -124,12 +124,9 @@ def exibir_resultado():
 @app.errorhandler(413)
 def payload_too_large(e):
     # Reutilizamos nosso template de resultado para mostrar o erro
-    erro_msg = "Arquivo muito grande! O tamanho máximo permitido é de 10 MB."
+    erro_msg = f"Arquivo muito grande! O tamanho máximo permitido é de 15 MB."
     return render_template('resultado.html', erro=erro_msg), 413
 # -------------------------------------------------------------
-
-if __name__ == '__main__':
-    app.run(debug=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
