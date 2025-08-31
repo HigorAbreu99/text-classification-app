@@ -23,6 +23,15 @@ form {
     margin-top: 1em;
 }
 
+/* --- NOVO: Classe para alinhar botões e outros elementos horizontalmente --- */
+.form-group-horizontal {
+    display: flex;
+    justify-content: center; /* Centraliza os itens */
+    align-items: center; /* Alinha na vertical */
+    gap: 15px; /* Espaço entre os elementos */
+    margin-top: 1em;
+}
+
 /* --- O RESTO DO SEU CSS CONTINUA O MESMO --- */
 
 .box {
@@ -60,6 +69,10 @@ form {
     font-size: 16px;
 }
 
+.button:hover {
+    background-color: #03468f;
+}
+
 #text-input {
     resize: none;
     overflow-y: auto;
@@ -83,11 +96,15 @@ form {
     background-color: #6c757d; /* Um tom de cinza, por exemplo */
 }
 
+.button-secondary:hover {
+    background-color: #40454a; /* Um tom de cinza, por exemplo */
+}
+
 /* Opcional: Estilo para o nome do arquivo selecionado */
 #file-name {
     margin-left: 15px;
     font-style: italic;
-    color: #555;
+    color: #ed1e1e;
 }
 
 /* Nova classe para botões de "perigo" ou cancelamento */
@@ -98,4 +115,12 @@ form {
 /* Efeito opcional para quando o mouse passa por cima */
 .button-danger:hover {
     background-color: #c82333; /* Um vermelho um pouco mais escuro */
+}
+
+.button-success {
+    background-color: #28a745;
+}
+
+.button-success:hover {
+    background-color: #218838;
 }

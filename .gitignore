@@ -1,12 +1,29 @@
+# Ambiente Virtual
+# Contém as bibliotecas instaladas e é específico da sua máquina.
+# Deve ser recriado a partir do requirements.txt.
+/venv/
+
+# Cache do Python
+# Arquivos compilados que o Python gera automaticamente.
+__pycache__/
+*.pyc
+
+# Artefatos de Treinamento
+# A pasta com o modelo treinado. Esses arquivos são grandes e
+# podem ser gerados novamente executando o script de treino.
+/email_classifier_trainer/
+
+# Arquivos de IDE e Sistema Operacional (Boas Práticas)
+# Pastas de configuração de editores de código e arquivos de sistema.
+.vscode/
+.idea/
+.DS_Store
+
 # Ignorar a pasta do ambiente virtual
 venv/
 
 # Ignorar a pasta com exemplos de input
 inputExamples/
-
-# Ignorar caches e arquivos compilados do Python
-__pycache__/
-*.pyc
 
 # Outros arquivos que podem ser ignorados (opcional)
 .env

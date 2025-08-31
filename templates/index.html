@@ -13,13 +13,16 @@
         <hr />
 
         <h3>Opção 1: Enviar um arquivo (.txt ou .pdf)</h3>
-        <p>O processamento começará imediatamente após a seleção.</p>
-        <form id="upload-form" method="post" enctype="multipart/form-data">
+        <form id="upload-form" action="{{ url_for('pagina_inicial') }}" method="post" enctype="multipart/form-data">
             <input type="file" name="file" id="file-input" />
 
             <label for="file-input" class="button button-secondary"
                 >Escolher Arquivo</label
             >
+
+            <button type="submit" class="button button-success">
+                Enviar Arquivo
+            </button>
 
             <span id="file-name">Nenhum arquivo selecionado</span>
         </form>

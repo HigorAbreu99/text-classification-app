@@ -5,18 +5,24 @@ const resultadoContainer = document.getElementById("resultado-container");
 const fileInput = document.getElementById("file-input");
 const uploadForm = document.getElementById("upload-form");
 
-if (fileInput && uploadForm) {
-    fileInput.addEventListener("change", function () {
-        if (fileInput.files.length > 0) {
-            resultadoContainer.innerHTML =
-                "<h2>Processando arquivo, por favor aguarde...</h2>";
-            uploadForm.submit();
-        }
-    });
-}
+// if (fileInput && uploadForm) {
+//     fileInput.addEventListener("change", function () {
+//         // if (fileInput.files.length > 0) {
+//             resultadoContainer.innerHTML =
+//                 "<h2>Processando arquivo, por favor aguarde...</h2>";
+//         // }
+//     });
+// }
 
 // --- Lógica para o formulário de ENVIO DE TEXTO ---
 const textForm = document.getElementById("text-form");
+
+if (textForm) {
+    textForm.addEventListener("submit", function () {
+        resultadoContainer.innerHTML =
+            "<h2>Processando texto, por favor aguarde...</h2>";
+    });
+}
 
 if (textForm) {
     // Escuta o evento 'submit', que é disparado quando o botão é clicado

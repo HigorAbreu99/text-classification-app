@@ -1,0 +1,6 @@
+Olá, equipe.
+
+Segue o resumo da nossa reunião de hoje. Concluímos a análise de requisitos e o escopo foi aprovado por todos. O próximo passo é a alocação de tarefas, que será feita até amanhã (01/09). A documentação atualizada já está disponível na pasta compartilhada. Peço que revisem o cronograma e confirmem a disponibilidade para o início do desenvolvimento na próxima segunda-feira.
+
+Obrigado,
+Carlos
