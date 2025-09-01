@@ -28,3 +28,5 @@ inputExamples/
 # Outros arquivos que podem ser ignorados (opcional)
 .env
 *.db
+
+key-classifier.pem
