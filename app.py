@@ -1,145 +1,117 @@
-# Adicione redirect, url_for e session aos seus imports
-from flask import Flask, request, render_template, redirect, url_for, session
+import os
 import magic
-import fitz
-import os  # Necessário para a secret_key
-import requests
+import fitz  # PyMuPDF
+from flask import Flask, request, render_template, redirect, url_for, flash
+from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
+# Importa as funções do nosso módulo de classificação
+# (Vamos criar este arquivo a seguir)
+from src.classifier_utils import load_classifier, classify_email
+
+# Carrega as variáveis de ambiente (ex: FLASK_SECRET_KEY)
 load_dotenv()
 
+# --- CONFIGURAÇÃO INICIAL ---
+
+# Carrega o modelo de IA UMA ÚNICA VEZ ao iniciar o app.
+# Isso é crucial para o desempenho em produção.
+print("A carregar o modelo de classificação... Isto pode demorar um momento.")
+classifier_pipeline = load_classifier()
+print("Modelo carregado com sucesso!")
+
+
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'uma-chave-secreta-padrao-para-desenvolvimento')
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
+ALLOWED_EXTENSIONS = {'txt', 'pdf'}
 
-# Define o tamanho máximo do payload (upload) em 15 MB
-# O cálculo é: 15 * 1024 (KB) * 1024 (MB)
-app.config["MAX_CONTENT_LENGTH"] = 15 * 1024 * 1024
-# -------------------------
-
-# IMPORTANTE: Para usar a 'session', o Flask exige uma "chave secreta" (secret_key).
-# Para desenvolvimento, podemos usar uma chave aleatória como esta.
-# app.secret_key = os.urandom(24)
-
-# 3. Carregue as chaves do ambiente usando os.getenv()
-app.secret_key = os.getenv("FLASK_SECRET_KEY")
-
-# Verificação para garantir que as chaves foram carregadas
-if not app.secret_key:
-    raise ValueError(
-        "Chaves secreta não encontrada no ambiente. Verifique seu arquivo .env"
-    )
+# Garante que a pasta de uploads exista
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
-# A rota principal agora se chama 'pagina_inicial' para clareza
-@app.route("/", methods=["GET", "POST"])
+def allowed_file(filename):
+    """Verifica se a extensão do ficheiro é permitida."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def extract_text_from_file(filepath):
+    """Extrai texto de ficheiros .txt e .pdf."""
+    try:
+        mime_type = magic.from_file(filepath, mime=True)
+        if mime_type == 'application/pdf':
+            with fitz.open(filepath) as doc:
+                return "".join(page.get_text() for page in doc), None
+        elif mime_type.startswith('text/'):
+            with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                return f.read(), None
+        else:
+            return None, f"Tipo de ficheiro não suportado: {mime_type}"
+    except Exception as e:
+        return None, f"Erro ao processar o ficheiro: {str(e)}"
+    finally:
+        # Apaga o ficheiro após o processamento para economizar espaço
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+
+@app.route('/', methods=['GET', 'POST'])
 def pagina_inicial():
-    # A lógica de POST foi movida daqui para ser mais limpa
-    if request.method == "POST":
-        conteudo_extraido = None
-        erro = None
+    if request.method == 'POST':
+        text_content = ""
+        error = None
 
-        # Lógica para ARQUIVO
-        if "file" in request.files and request.files["file"].filename != "":
-            file = request.files["file"]
-            MIME_TYPES_PERMITIDOS = ["application/pdf"]
-            chunk = file.stream.read(2048)
-            file.stream.seek(0)
-            mime_type_real = magic.from_buffer(chunk, mime=True)
+        # Opção 1: Input de texto
+        if 'text_input' in request.form and request.form['text_input'].strip():
+            text_content = request.form['text_input']
 
-            if (
-                mime_type_real.startswith("text/")
-                or mime_type_real in MIME_TYPES_PERMITIDOS
-            ):
-                try:
-                    if mime_type_real == "application/pdf":
-                        file_bytes = file.stream.read()
-                        with fitz.open(stream=file_bytes, filetype="pdf") as doc:
-                            conteudo_extraido = "".join(page.get_text() for page in doc)
-                    else:
-                        conteudo_extraido = file.read().decode("utf-8", errors="ignore")
-                except Exception as e:
-                    erro = f"Erro ao processar o conteúdo do arquivo: {e}"
+        # Opção 2: Upload de ficheiro
+        elif 'file' in request.files:
+            file = request.files.get('file')
+            if not file or file.filename == '':
+                error = 'Nenhum ficheiro selecionado.'
+            elif file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                text_content, error = extract_text_from_file(filepath)
             else:
-                erro = f"Formato de arquivo não suportado ({mime_type_real})."
+                error = 'Extensão de ficheiro não permitida. Use .txt ou .pdf.'
 
-        # Lógica para TEXTO
-        elif "text_input" in request.form and request.form["text_input"].strip() != "":
-            conteudo_extraido = request.form["text_input"]
+        else:
+            error = "Nenhum texto ou ficheiro enviado."
 
-        # Armazena os resultados na SESSÃO
-        if erro:
-            session["erro"] = erro
-        elif conteudo_extraido:
-            # Simula o processamento (contagem de caracteres)
-            resultado_processamento = (
-                f"O texto contém {len(conteudo_extraido)} caracteres."
-            )
-            session["texto_original"] = conteudo_extraido
-            session["resultado"] = resultado_processamento
+        if error:
+            flash(error, 'danger')
+            return redirect(url_for('pagina_inicial'))
 
-            # --- INÍCIO DA INTEGRAÇÃO COM A API EXTERNA ---
-            # try:
-            #     api_url = "https://api.exemplo.com/analise_sentimento"
+        if not text_content or not text_content.strip():
+            flash('O texto extraído está vazio.', 'warning')
+            return redirect(url_for('pagina_inicial'))
 
-            #     # 1. Defina os seus headers em um dicionário.
-            #     headers = {
-            #         'Content-Type': 'application/json',
-            #         'Accept': 'application/json',
-            #         'X-API-Key': 'SUA_CHAVE_SECRETA_DA_API_AQUI',
-            #         'User-Agent': 'MeuAppDeClassificacao/1.0'
-            #     }
+        # Realiza a classificação usando o modelo já carregado
+        label = classify_email(classifier_pipeline, text_content)
 
-            #     # Dados a serem enviados no corpo (body) da requisição POST
-            #     payload = {
-            #         'texto': conteudo_extraido
-            #     }
+        # Mapeia a label para um resultado legível
+        # LABEL_0 -> Produtivo, LABEL_1 -> Improdutivo
+        if label == 'LABEL_0':
+            result = 'Produtivo'
+        else:
+            result = 'Improdutivo'
 
-            #     # 2. Adicione o argumento 'headers=headers' à sua chamada POST.
-            #     response = requests.post(api_url, json=payload, headers=headers, timeout=10)
+        return render_template('resultado.html', result=result, text=text_content)
 
-            #     response.raise_for_status()
-
-            #     dados_api = response.json()
-            #     sentimento = dados_api.get('sentimento', 'desconhecido')
-            #     score = dados_api.get('score', 0)
-
-            #     resultado_processamento = f"Sentimento detectado: {sentimento} (Confiança: {score:.2f})."
-            #     session['texto_original'] = conteudo_extraido
-            #     session['resultado'] = resultado_processamento
-
-            # except requests.exceptions.RequestException as e:
-            #    session['erro'] = f"Erro ao contatar o serviço de análise: {e}"
-            # --- FIM DA INTEGRAÇÃO ---
-
-        # Redireciona para a página de resultados
-        return redirect(url_for("exibir_resultado"))
-
-    # Se a requisição for GET, apenas mostra a página inicial de upload
-    return render_template("index.html")
+    return render_template('index.html')
 
 
-# Nova rota APENAS para exibir os resultados
-@app.route("/resultado")
-def exibir_resultado():
-    # Pega os dados da sessão (e os remove para não aparecerem novamente se a página for recarregada)
-    erro = session.pop("erro", None)
-    texto_original = session.pop("texto_original", None)
-    resultado = session.pop("resultado", None)
-
-    # Renderiza o novo template 'resultado.html' com os dados
-    return render_template(
-        "resultado.html", erro=erro, texto_original=texto_original, resultado=resultado
-    )
-
-
-# --- MANIPULADOR DE ERRO PERSONALIZADO PARA ARQUIVOS GRANDES ---
 @app.errorhandler(413)
 def payload_too_large(e):
-    # Reutilizamos nosso template de resultado para mostrar o erro
-    erro_msg = f"Arquivo muito grande! O tamanho máximo permitido é de 15 MB."
-    return render_template("resultado.html", erro=erro_msg), 413
+    flash('Ficheiro muito grande! O tamanho máximo permitido é de 16 MB.', 'danger')
+    return redirect(url_for('pagina_inicial'))
 
 
-# -------------------------------------------------------------
+if __name__ == '__main__':
+    # host='0.0.0.0' permite que a app seja acessível na sua rede local,
+    # o que é essencial para o Docker.
+    app.run(host='0.0.0.0', port=5000, debug=True)
 
-if __name__ == "__main__":
-    app.run(debug=True)
