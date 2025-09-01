@@ -1,0 +1,17 @@
+# Ambiente virtual e cache
+venv/
+__pycache__/
+*.pyc
+
+# Ficheiros do Git e do Docker
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+
+# Ficheiros de configuração local e de documentação
+.env
+README.md
+
+# Pasta de uploads temporários
+uploads/

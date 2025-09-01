@@ -22,6 +22,9 @@ Manipulação de Ficheiros: PyMuPDF (para PDFs), python-magic (para verificaçã
 
 Ambiente: python-dotenv
 
+## Repositório do Model treinado
+https://huggingface.co/hiigorabreu/email_classifier_trainer
+
 ## Estrutura do Projeto
 .
 ├── app.py                   # Ficheiro principal da aplicação Flask
